@@ -78,6 +78,13 @@ UiServer::UiServer(ProgressListModel* model)
     m_systemTray->setIcon(QIcon::fromTheme(QStringLiteral("view-process-system")));
     m_systemTray->setToolTip(i18n("List of running file transfers/jobs (kuiserver)"));
     m_systemTray->show();
+    connect(m_systemTray, &QSystemTrayIcon::activated, this, [=](QSystemTrayIcon::ActivationReason reason) {
+        if (this->isVisible()) {
+            this->hide();
+        } else {
+            this->show();
+        }
+    });
     resize(450, 450);
     applySettings();
 }
