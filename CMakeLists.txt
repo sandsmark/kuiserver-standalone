@@ -1,6 +1,22 @@
-add_definitions(-DTRANSLATION_DOMAIN=\"kuiserver5\")
+cmake_minimum_required(VERSION 3.0)
 
-add_subdirectory( tests )
+find_package(Qt5 CONFIG REQUIRED COMPONENTS DBus Widgets Test Network)
+find_package(ECM REQUIRED NO_MODULE)
+
+set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
+include(KDEInstallDirs)
+include(KDECMakeSettings)
+
+add_definitions(-DTRANSLATION_DOMAIN=\"kuiserver5\")
+find_package(KF5 ${KF5_MIN_VERSION} REQUIRED
+    I18n
+    Config
+    Init
+    KIO
+    Notifications
+    DBusAddons
+    )
+
 
 set(kuiserver_KDEINIT_SRCS
     main.cpp
@@ -18,6 +34,7 @@ uiserver_p.h
 
 ki18n_wrap_ui(kuiserver_KDEINIT_SRCS configdialog.ui)
 
+add_subdirectory( tests )
 
 #<DBus Stuff>
 
@@ -52,15 +69,7 @@ kconfig_add_kcfg_files(kuiserver_KDEINIT_SRCS kuiserversettings.kcfgc)
 
 kf5_add_kdeinit_executable( kuiserver5 ${kuiserver_KDEINIT_SRCS})
 
-if (Q_WS_MAC)
-    set_target_properties(kuiserver5 PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/Info.plist.template)
-    set_target_properties(kuiserver5 PROPERTIES MACOSX_BUNDLE_GUI_IDENTIFIER "org.kde.kuiserver")
-    set_target_properties(kuiserver5 PROPERTIES MACOSX_BUNDLE_BUNDLE_NAME "KDE UI Server")
-endif ()
-
-
 target_link_libraries(kdeinit_kuiserver5
-    PW::KWorkspace
     Qt5::DBus
     KF5::ConfigWidgets
     KF5::DBusAddons
