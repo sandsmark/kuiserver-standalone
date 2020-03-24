@@ -10,14 +10,12 @@ include(KDEInstallDirs)
 include(KDECMakeSettings)
 
 add_definitions(-DTRANSLATION_DOMAIN=\"kuiserver5\")
-find_package(KF5 ${KF5_MIN_VERSION} REQUIRED
-    I18n
-    Config
-    Init
-    KIO
-    Notifications
-    DBusAddons
-    )
+find_package(KF5I18n)
+find_package(KF5Config)
+find_package(KF5Init)
+find_package(KF5KIO)
+find_package(KF5Notifications)
+find_package(KF5DBusAddons)
 
 
 set(kuiserver_KDEINIT_SRCS
