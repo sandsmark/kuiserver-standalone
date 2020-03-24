@@ -134,7 +134,7 @@ void ProgressListDelegate::paint(QPainter *painter, const QStyleOptionViewItem &
 
         textHeight = fontMetrics.size(Qt::TextSingleLine, textToShow).height();
 
-        painter->drawText(d->getCurrentLeftMargin(textHeight) + option.rect.left(), coordY, fontMetrics.width(textToShow), textHeight, Qt::AlignLeft, textToShow);
+        painter->drawText(d->getCurrentLeftMargin(textHeight) + option.rect.left(), coordY, fontMetrics.horizontalAdvance(textToShow), textHeight, Qt::AlignLeft, textToShow);
 
         coordY += textHeight;
     }
