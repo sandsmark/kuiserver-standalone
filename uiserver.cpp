@@ -30,12 +30,14 @@
 #include <QWidget>
 #include <QAction>
 #include <QCloseEvent>
+#include <QMenu>
 #include <qsystemtrayicon.h>
 #include <QToolBar>
 #include <kconfigdialog.h>
+#include <QVBoxLayout>
 
 UiServer::UiServer(ProgressListModel* model)
-        : KXmlGuiWindow(nullptr)
+        : QDialog(nullptr)
 {
     //NOTE: if enough people really hate this dialog (having centralized information and such),
     //I imagine we could somehow forward it to the old dialogs, which would be displayed 1 for each job.
@@ -43,17 +45,17 @@ UiServer::UiServer(ProgressListModel* model)
 
     QString configure = i18n("Configure...");
 
-    toolBar = addToolBar(configure);
-    toolBar->setMovable(false);
-    toolBar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    //toolBar = addToolBar(configure);
+    //toolBar->setMovable(false);
+    //toolBar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
 
-    QAction *configureAction = toolBar->addAction(configure);
+    QMenu *trayMenu = new QMenu(this);
+
+    QAction *configureAction = trayMenu->addAction(configure);
     configureAction->setIcon(QIcon::fromTheme(QStringLiteral("configure")));
     configureAction->setIconText(configure);
 
     connect(configureAction, &QAction::triggered, this, &UiServer::showConfigurationDialog);
-
-    toolBar->addSeparator();
 
     listProgress = new QListView(this);
     listProgress->setAlternatingRowColors(true);
@@ -62,7 +64,8 @@ UiServer::UiServer(ProgressListModel* model)
     listProgress->setSelectionMode(QAbstractItemView::NoSelection);
     listProgress->setModel(model);
 
-    setCentralWidget(listProgress);
+    setLayout(new QVBoxLayout);
+    layout()->addWidget(listProgress);
 
     progressListDelegate = new ProgressListDelegate(this, listProgress);
     progressListDelegate->setSeparatorPixels(5);
@@ -75,9 +78,12 @@ UiServer::UiServer(ProgressListModel* model)
 
 
     m_systemTray = new QSystemTrayIcon(this);
+    m_systemTray->setContextMenu(trayMenu);
     m_systemTray->setIcon(QIcon::fromTheme(QStringLiteral("view-process-system")));
     m_systemTray->setToolTip(i18n("List of running file transfers/jobs (kuiserver)"));
     m_systemTray->show();
+
+    QAction *quitAction = trayMenu->addAction(i18n("Quit"), qApp, &QApplication::quit);
     connect(m_systemTray, &QSystemTrayIcon::activated, this, [=](QSystemTrayIcon::ActivationReason reason) {
         if (this->isVisible()) {
             this->hide();
@@ -85,7 +91,7 @@ UiServer::UiServer(ProgressListModel* model)
             this->show();
         }
     });
-    resize(450, 450);
+    resize(1000, 1000);
     applySettings();
 }
 

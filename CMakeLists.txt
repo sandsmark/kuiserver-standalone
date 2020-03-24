@@ -1,3 +1,5 @@
+project(kuiserver-standalone)
+
 cmake_minimum_required(VERSION 3.0)
 
 find_package(Qt5 CONFIG REQUIRED COMPONENTS DBus Widgets Test Network)

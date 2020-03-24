@@ -25,7 +25,7 @@
 
 #include <QListView>
 
-#include <kxmlguiwindow.h>
+#include <QDialog>
 
 #include "jobview.h"
 
@@ -37,7 +37,7 @@ class ProgressListDelegate;
 class QToolBar;
 class QSystemTrayIcon;
 
-class UiServer : public KXmlGuiWindow
+class UiServer : public QDialog
 {
     Q_OBJECT
 
@@ -59,7 +59,6 @@ private:
     ProgressListDelegate *progressListDelegate = nullptr;
     QListView *listProgress = nullptr;
 
-    QToolBar *toolBar = nullptr;
     QSystemTrayIcon *m_systemTray = nullptr;
 
 };
