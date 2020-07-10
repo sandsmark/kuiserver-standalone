@@ -59,11 +59,9 @@ ProgressListModel::ProgressListModel(QObject *parent)
         "********** Error, we have failed to register object /JobViewServer.";
     }
 
-        m_uiServer = new UiServer(this);
-    /* unused
     if (m_registeredServices.isEmpty() && !m_uiServer) {
+        m_uiServer = new UiServer(this);
     }
-    */
 }
 
 ProgressListModel::~ProgressListModel()
@@ -261,48 +259,61 @@ void ProgressListModel::emitJobUrlsChanged()
 
 void ProgressListModel::registerService(const QString &serviceName, const QString &objectPath)
 {
+    if (serviceName.isEmpty()) {
+        qCWarning(KUISERVER) << "No servicename passed";
+        return;
+    }
+    if (objectPath.isEmpty()) {
+        qCWarning(KUISERVER) << "No objectpath passed";
+        return;
+    }
+
     QDBusConnection sessionBus = QDBusConnection::sessionBus();
 
-    if (!serviceName.isEmpty() && !objectPath.isEmpty()) {
-        if (sessionBus.interface()->isServiceRegistered(serviceName).value() &&
-                !m_registeredServices.contains(serviceName)) {
+    if (!sessionBus.interface()->isServiceRegistered(serviceName).value()) {
+        qCWarning(KUISERVER) << "service not registered" << serviceName;
+        return;
+    }
 
-            org::kde::JobViewServer *client =
-                new org::kde::JobViewServer(serviceName, objectPath, sessionBus);
+    if (m_registeredServices.contains(serviceName)) {
+        qCWarning(KUISERVER) << serviceName << "already registered!";
+        return;
+    }
 
-            if (client->isValid()) {
+    org::kde::JobViewServer *client =
+        new org::kde::JobViewServer(serviceName, objectPath, sessionBus);
 
-                delete m_uiServer;
-                m_uiServer = nullptr;
+    if (!client->isValid()) {
+        qCWarning(KUISERVER) << "Client invalid!";
+        delete client;
+        return;
+    }
 
-                m_serviceWatcher->addWatchedService(serviceName);
-                m_registeredServices.insert(serviceName, client);
+    delete m_uiServer;
+    m_uiServer = nullptr;
+
+    m_serviceWatcher->addWatchedService(serviceName);
+    m_registeredServices.insert(serviceName, client);
 
 
-                //tell this new client to create all of the same jobs that we currently have.
-                //also connect them so that when the method comes back, it will return a
-                //QDBusObjectPath value, which is where we can contact that job, within "org.kde.JobViewV2"
-                //TODO: KDE5 remember to replace current org.kde.JobView interface with the V2 one.. (it's named V2 for compat. reasons).
+    //tell this new client to create all of the same jobs that we currently have.
+    //also connect them so that when the method comes back, it will return a
+    //QDBusObjectPath value, which is where we can contact that job, within "org.kde.JobViewV2"
+    //TODO: KDE5 remember to replace current org.kde.JobView interface with the V2 one.. (it's named V2 for compat. reasons).
 
-                //TODO: this falls victim to what newJob used to be vulnerable to...async calls returning too slowly and a terminate ensuing before that.
-                // it may not be a problem (yet), though.
-                foreach(JobView* jobView, m_jobViews) {
+    //TODO: this falls victim to what newJob used to be vulnerable to...async calls returning too slowly and a terminate ensuing before that.
+    // it may not be a problem (yet), though.
+    for (JobView* jobView : m_jobViews) {
+        QDBusPendingCall pendingCall = client->asyncCall(QLatin1String("requestView"), jobView->appName(), jobView->appIconName(), jobView->capabilities());
 
-                    QDBusPendingCall pendingCall = client->asyncCall(QLatin1String("requestView"), jobView->appName(), jobView->appIconName(), jobView->capabilities());
-
-                    RequestViewCallWatcher *watcher = new RequestViewCallWatcher(jobView, serviceName, pendingCall, this);
-                    connect(watcher, &RequestViewCallWatcher::callFinished, jobView, &JobView::pendingCallFinished);
-                }
-            } else {
-                delete client;
-            }
-        }
+        RequestViewCallWatcher *watcher = new RequestViewCallWatcher(jobView, serviceName, pendingCall, this);
+        connect(watcher, &RequestViewCallWatcher::callFinished, jobView, &JobView::pendingCallFinished);
     }
 }
 
 bool ProgressListModel::requiresJobTracker()
 {
-    return m_registeredServices.isEmpty();
+    return m_registeredServices.isEmpty() && !m_uiServer;
 }
 
 void ProgressListModel::serviceUnregistered(const QString &name)
@@ -313,12 +324,10 @@ void ProgressListModel::serviceUnregistered(const QString &name)
         emit serviceDropped(name);
         m_registeredServices.remove(name);
 
-        /* unused (FIXME)
-        if (m_registeredServices.isEmpty()) {
+        if (m_registeredServices.isEmpty() && !m_uiServer) {
             //the last service dropped, we *need* to show our GUI
             m_uiServer = new UiServer(this);
         }
-         */
     }
 
     QList<JobView*> jobs = m_jobViewsOwners.values(name);
