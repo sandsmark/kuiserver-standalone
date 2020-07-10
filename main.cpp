@@ -37,6 +37,7 @@ extern "C" Q_DECL_EXPORT int kdemain(int argc, char **argv)
     app.setApplicationName(QStringLiteral("kuiserver"));
     app.setApplicationVersion(QStringLiteral("2.0"));
     app.setOrganizationDomain(QStringLiteral("kde.org"));
+    app.setQuitOnLastWindowClosed(false);
 
     QCommandLineParser parser;
     parser.addHelpOption();
