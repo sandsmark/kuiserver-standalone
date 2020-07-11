@@ -208,13 +208,12 @@ QDBusObjectPath ProgressListModel::newJob(const QString &appName, const QString 
     connect(newJob, &JobView::changed, this, &ProgressListModel::jobChanged);
     connect(newJob, &JobView::finished, this, &ProgressListModel::jobFinished);
     connect(newJob, &JobView::destUrlSet, this, &ProgressListModel::emitJobUrlsChanged);
-    connect(newJob, &JobView::removeRequested, this, &ProgressListModel::removeJob, Qt::QueuedConnection);
+    connect(newJob, &JobView::removeRequested, this, &ProgressListModel::removeJob);
     connect(this, SIGNAL(serviceDropped(const QString&)), newJob, SLOT(serviceDropped(const QString&)));
 
 
     //Forward this new job over to existing DBus clients.
-    foreach(QDBusAbstractInterface* interface, m_registeredServices) {
-
+    for(QDBusAbstractInterface* interface : m_registeredServices) {
         newJob->pendingCallStarted();
         QDBusPendingCall pendingCall = interface->asyncCall(QLatin1String("requestView"), appName, appIcon, capabilities);
         RequestViewCallWatcher *watcher = new RequestViewCallWatcher(newJob, interface->service(), pendingCall, this);
@@ -243,6 +242,11 @@ void ProgressListModel::removeJob(JobView *jobView)
         return;
     }
 
+    // This leads to a warning from KWidgetItemDelegate, because its pool
+    // doesn't want others to delete the widgets we create for it.
+    //
+    // The fun thing is that it's KWidgetItemDelegate itself that subscribes to
+    // the rowsAboutToBeRemoved and deletes the widgets behind its back...
     beginRemoveRows(toRemove.parent(), toRemove.row(), toRemove.row());
     m_jobViews.removeAt(toRemove.row());
     endRemoveRows();
