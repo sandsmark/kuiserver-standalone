@@ -208,6 +208,7 @@ QDBusObjectPath ProgressListModel::newJob(const QString &appName, const QString 
     connect(newJob, &JobView::changed, this, &ProgressListModel::jobChanged);
     connect(newJob, &JobView::finished, this, &ProgressListModel::jobFinished);
     connect(newJob, &JobView::destUrlSet, this, &ProgressListModel::emitJobUrlsChanged);
+    connect(newJob, &JobView::removeRequested, this, &ProgressListModel::removeJob, Qt::QueuedConnection);
     connect(this, SIGNAL(serviceDropped(const QString&)), newJob, SLOT(serviceDropped(const QString&)));
 
 
@@ -234,16 +235,30 @@ QStringList ProgressListModel::gatherJobUrls()
     return jobUrls;
 }
 
+void ProgressListModel::removeJob(JobView *jobView)
+{
+    const QModelIndex toRemove = indexForJob(jobView);
+    if (!toRemove.isValid()) {
+        qCWarning(KUISERVER) << "Requested removal of invalid job view" << jobView;
+        return;
+    }
+
+    beginRemoveRows(toRemove.parent(), toRemove.row(), toRemove.row());
+    m_jobViews.removeAt(toRemove.row());
+    endRemoveRows();
+
+}
+
 void ProgressListModel::jobFinished(JobView *jobView)
 {
-        // Job finished, delete it if we are not in self-ui mode, *and* the config option to keep finished jobs is set
-        //TODO: does not check for case for the config
-        if (!m_uiServer) {
-            qCDebug(KUISERVER) << "removing jobview from list, it finished";
-            m_jobViews.removeOne(jobView);
-            //job dies, dest. URL's change..
-            emit jobUrlsChanged(gatherJobUrls());
-        }
+    // Job finished, delete it if we are not in self-ui mode, *and* the config option to keep finished jobs is set
+    //TODO: does not check for case for the config
+    if (!m_uiServer) {
+        qCDebug(KUISERVER) << "removing jobview from list, it finished";
+        m_jobViews.removeOne(jobView);
+        //job dies, dest. URL's change..
+        emit jobUrlsChanged(gatherJobUrls());
+    }
 }
 
 void ProgressListModel::jobChanged(uint jobId)

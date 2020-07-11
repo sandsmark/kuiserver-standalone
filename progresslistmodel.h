@@ -149,6 +149,8 @@ private Q_SLOTS:
     void jobFinished(JobView *jobView);
     void jobChanged(uint jobId);
 
+    void removeJob(JobView *jobView);
+
 
     /**
     * Implemented to handle the case when a client drops out.

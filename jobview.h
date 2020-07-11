@@ -166,6 +166,7 @@ Q_SIGNALS:
     void cancelRequested();
 
     void finished(JobView*);
+    void removeRequested(JobView*);
 
     /**
      * Triggered when an internal data type changes. It is triggered

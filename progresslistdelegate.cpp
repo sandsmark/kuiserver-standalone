@@ -86,6 +86,7 @@ ProgressListDelegate::ProgressListDelegate(QObject *parent, QListView *listView)
 
 ProgressListDelegate::~ProgressListDelegate()
 {
+    qWarning() << "Deleting delegate" << d;
     delete d;
 }
 
@@ -231,14 +232,14 @@ QList<QWidget*> ProgressListDelegate::createItemWidgets(const QModelIndex &index
     Q_UNUSED( index )
     QList<QWidget*> widgetList;
 
-    QPushButton *pauseResumeButton = new QPushButton();
+    QPushButton *pauseResumeButton = new QPushButton;
     pauseResumeButton->setIcon(QIcon::fromTheme(QStringLiteral("media-playback-pause")));
 
-    QPushButton *cancelButton = new QPushButton();
+    QPushButton *cancelButton = new QPushButton;
     cancelButton->setIcon(QIcon::fromTheme(QStringLiteral("media-playback-stop")));
 
     QPushButton *clearButton = new QPushButton(QIcon::fromTheme(QStringLiteral("edit-clear")), i18n("Clear"));
-    QProgressBar *progressBar = new QProgressBar();
+    //QProgressBar *progressBar = new QProgressBar;
 
     connect(pauseResumeButton, &QAbstractButton::clicked, this, &ProgressListDelegate::slotPauseResumeClicked);
     connect(cancelButton, &QAbstractButton::clicked, this, &ProgressListDelegate::slotCancelClicked);
@@ -249,7 +250,7 @@ QList<QWidget*> ProgressListDelegate::createItemWidgets(const QModelIndex &index
     setBlockedEventTypes(cancelButton, QList<QEvent::Type>() << QEvent::MouseButtonPress
                          << QEvent::MouseButtonRelease << QEvent::MouseButtonDblClick);
 
-    widgetList << pauseResumeButton << cancelButton << progressBar << clearButton;
+    widgetList << pauseResumeButton << cancelButton << d->progressBar << clearButton;
 
     return widgetList;
 }
@@ -272,16 +273,17 @@ void ProgressListDelegate::updateItemWidgets(const QList<QWidget*> widgets,
 
     int percent = d->getPercent(index);
 
-    cancelButton->setVisible(percent < 100);
-    pauseResumeButton->setVisible(percent < 100);
-    clearButton->setVisible(percent > 99);
+    JobView::JobState state = (JobView::JobState) index.model()->data(index, JobView::State).toInt();
+    const bool isStopped = state == JobView::Stopped;
+
+    cancelButton->setVisible(percent < 100 && !isStopped);
+    pauseResumeButton->setVisible(percent < 100 && !isStopped);
+    clearButton->setVisible(percent > 99 || isStopped);
 
     KJob::Capabilities capabilities = (KJob::Capabilities) index.model()->data(index, JobView::Capabilities).toInt();
     cancelButton->setEnabled(capabilities & KJob::Killable);
     pauseResumeButton->setEnabled(capabilities & KJob::Suspendable);
 
-
-    JobView::JobState state = (JobView::JobState) index.model()->data(index, JobView::State).toInt();
     switch (state) {
     case JobView::Running:
         pauseResumeButton->setToolTip(i18n("Pause"));
@@ -298,9 +300,7 @@ void ProgressListDelegate::updateItemWidgets(const QList<QWidget*> widgets,
 
     QSize progressBarButtonSizeHint;
 
-
-
-    if (percent < 100) {
+    if (percent < 100 && !isStopped) {
         QSize cancelButtonSizeHint = cancelButton->sizeHint();
 
         cancelButton->move(option.rect.width() - d->separatorPixels - cancelButtonSizeHint.width(),
@@ -365,7 +365,7 @@ void ProgressListDelegate::slotClearClicked()
     const QModelIndex index = focusedIndex();
     JobView *jobView = index.model()->data(index, JobView::JobViewRole).value<JobView*>();
     if (jobView) {
-        jobView->terminate(QString());
+        emit jobView->removeRequested(jobView);
     }
 }
 

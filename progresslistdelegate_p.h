@@ -43,12 +43,12 @@ public:
         editorHeight(0),
         iconWidth(0),
         listView(listView),
-        progressBar(new QProgressBar(nullptr))
+        progressBar(new QProgressBar)
     {
     }
 
     ~Private() {
-        delete progressBar;
+        //delete progressBar;
     }
 
     QString getIcon(const QModelIndex &index) const;

@@ -53,6 +53,7 @@ JobView::~JobView()
 
 void JobView::terminate(const QString &errorMessage)
 {
+    qDebug() << "terminated" << errorMessage;
     QDBusConnection::sessionBus().unregisterObject(m_objectPath.path(), QDBusConnection::UnregisterTree);
 
     typedef QPair<QString, QDBusAbstractInterface*> iFacePair;
@@ -65,6 +66,7 @@ void JobView::terminate(const QString &errorMessage)
     m_errorText = errorMessage;
 
     if (m_currentPendingCalls < 1) {
+        qDebug() << "no pending calls";
         // if hit it means a job exists for *something* but can't be terminated properly
         // because the async call to create the job didn't come back fast enough.
         // (thus addJobContact wasn't called before this was hit).
@@ -105,6 +107,9 @@ void JobView::setSuspended(bool suspended)
 
 uint JobView::state() const
 {
+    if (m_isTerminated) {
+        return Stopped;
+    }
     return m_state;
 }
 
