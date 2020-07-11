@@ -62,6 +62,7 @@ ProgressListModel::ProgressListModel(QObject *parent)
     if (m_registeredServices.isEmpty() && !m_uiServer) {
         m_uiServer = new UiServer(this);
     }
+
 }
 
 ProgressListModel::~ProgressListModel()
@@ -247,10 +248,12 @@ void ProgressListModel::removeJob(JobView *jobView)
     //
     // The fun thing is that it's KWidgetItemDelegate itself that subscribes to
     // the rowsAboutToBeRemoved and deletes the widgets behind its back...
+    //
+    // And if you thought we could try to e. g. use beginResetModel(), think
+    // again, that crashes instantly. :-)
     beginRemoveRows(toRemove.parent(), toRemove.row(), toRemove.row());
     m_jobViews.removeAt(toRemove.row());
     endRemoveRows();
-
 }
 
 void ProgressListModel::jobFinished(JobView *jobView)
@@ -263,6 +266,9 @@ void ProgressListModel::jobFinished(JobView *jobView)
         //job dies, dest. URL's change..
         emit jobUrlsChanged(gatherJobUrls());
     }
+    QModelIndex changedIndex = indexForJob(jobView);
+    emit dataChanged(changedIndex, changedIndex);
+
 }
 
 void ProgressListModel::jobChanged(uint jobId)

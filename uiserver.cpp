@@ -35,6 +35,7 @@
 #include <QToolBar>
 #include <kconfigdialog.h>
 #include <QVBoxLayout>
+#include <QDebug>
 
 UiServer::UiServer(ProgressListModel* model)
         : QDialog(nullptr)
@@ -63,6 +64,14 @@ UiServer::UiServer(ProgressListModel* model)
     listProgress->setUniformItemSizes(true);
     listProgress->setSelectionMode(QAbstractItemView::NoSelection);
     listProgress->setModel(model);
+
+    // KItemViews is _utterly_ and completely broken...
+    // TODO: when porting away from KItemViews, remove this hack
+    connect(model, &QAbstractItemModel::dataChanged, listProgress, [=](const QModelIndex&, const QModelIndex&, const QVector<int>&){
+            const QSize origSize = size();
+            resize(origSize.width() + 1, origSize.height() + 1);
+            resize(origSize.width(), origSize.height());
+            });
 
     setLayout(new QVBoxLayout);
     layout()->addWidget(listProgress);

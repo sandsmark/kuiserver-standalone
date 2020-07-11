@@ -29,6 +29,7 @@
 #include <QFontMetrics>
 #include <QListView>
 #include <QProgressBar>
+#include <QMessageBox>
 #include <KLocalizedString>
 
 #define MIN_CONTENT_PIXELS 50
@@ -194,7 +195,7 @@ QSize ProgressListDelegate::sizeHint(const QStyleOptionViewItem &option, const Q
     else
         itemHeight = d->minimumItemHeight;
 
-    return QSize(itemWidth + MIN_CONTENT_PIXELS, itemHeight);
+    return QSize(itemWidth + MIN_CONTENT_PIXELS, itemHeight + 10);
 }
 
 void ProgressListDelegate::setSeparatorPixels(int separatorPixels)
@@ -239,7 +240,6 @@ QList<QWidget*> ProgressListDelegate::createItemWidgets(const QModelIndex &index
     cancelButton->setIcon(QIcon::fromTheme(QStringLiteral("media-playback-stop")));
 
     QPushButton *clearButton = new QPushButton(QIcon::fromTheme(QStringLiteral("edit-clear")), i18n("Clear"));
-    //QProgressBar *progressBar = new QProgressBar;
 
     connect(pauseResumeButton, &QAbstractButton::clicked, this, &ProgressListDelegate::slotPauseResumeClicked);
     connect(cancelButton, &QAbstractButton::clicked, this, &ProgressListDelegate::slotCancelClicked);
@@ -262,6 +262,7 @@ void ProgressListDelegate::updateItemWidgets(const QList<QWidget*> widgets,
     if (!index.isValid()) {
         return;
     }
+    qDebug() << "updating";
 
     QPushButton *pauseResumeButton = static_cast<QPushButton*>(widgets[0]);
 
@@ -362,6 +363,8 @@ void ProgressListDelegate::slotCancelClicked()
 
 void ProgressListDelegate::slotClearClicked()
 {
+    QMessageBox::warning(nullptr, tr("KItemViews is broken"), tr("Removing items from a list makes KItemViews crash, so unfortunately this won't work..."));
+    return;
     const QModelIndex index = focusedIndex();
     JobView *jobView = index.model()->data(index, JobView::JobViewRole).value<JobView*>();
     if (jobView) {
