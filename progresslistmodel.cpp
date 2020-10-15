@@ -59,7 +59,7 @@ ProgressListModel::ProgressListModel(QObject *parent)
         "********** Error, we have failed to register object /JobViewServer.";
     }
 
-    if (m_registeredServices.isEmpty() && !m_uiServer) {
+    if (false && m_registeredServices.isEmpty() && !m_uiServer) {
         m_uiServer = new UiServer(this);
     }
 
