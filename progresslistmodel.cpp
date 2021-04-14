@@ -194,7 +194,7 @@ QDBusObjectPath ProgressListModel::newJob(const QString &appName, const QString 
     ++m_jobId;
 
     QString callerService = message().service();
-    m_jobViewsOwners.insertMulti(callerService, newJob);
+    m_jobViewsOwners.insert(callerService, newJob);
     m_serviceWatcher->addWatchedService(callerService);
 
     newJob->setAppName(appName);

@@ -184,7 +184,7 @@ private:
      * Stores a relationship between the process that requested the job and
      * the job itself by using the dbus service and he jobview.
      */
-    QHash<QString, JobView*> m_jobViewsOwners;
+    QMultiHash<QString, JobView*> m_jobViewsOwners;
 
     /**
      * Contains the list of registered services. In other words, the clients
