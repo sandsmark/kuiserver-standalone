@@ -262,7 +262,7 @@ void ProgressListDelegate::updateItemWidgets(const QList<QWidget*> widgets,
     if (!index.isValid()) {
         return;
     }
-    qDebug() << "updating";
+    qCDebug(KUISERVER) << "updating";
 
     QPushButton *pauseResumeButton = static_cast<QPushButton*>(widgets[0]);
 

@@ -65,7 +65,7 @@ void JobView::terminate(const QString &errorMessage)
     m_errorText = errorMessage;
 
     if (m_currentPendingCalls < 1) {
-        qDebug() << "no pending calls";
+        qCDebug(KUISERVER) << "no pending calls";
         // if hit it means a job exists for *something* but can't be terminated properly
         // because the async call to create the job didn't come back fast enough.
         // (thus addJobContact wasn't called before this was hit).
